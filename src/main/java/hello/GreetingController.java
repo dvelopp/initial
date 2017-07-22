@@ -4,6 +4,9 @@
  */
 package hello;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.stereotype.Controller;
@@ -15,12 +18,28 @@ import org.springframework.stereotype.Controller;
 @Controller
 public class GreetingController {
 
+    private Map<String, MovableObject> clients = new HashMap<>();
 
     @MessageMapping("/hello")
     @SendTo("/topic/greetings")
-    public Greeting greeting(HelloMessage message) throws Exception {
-        Thread.sleep(1000); // simulated delay
-        return new Greeting("Hello, " + message.getName() + "!");
+    public MovableObject greeting(Message message) throws Exception {
+        MovableObject position = clients.getOrDefault(message.getTargetId(), new MovableObject(message.getTargetId()));
+        clients.putIfAbsent(message.getTargetId(), position);
+        switch (message.getCharacter()) {
+            case "a":
+                position.setX(position.getX() - 10);
+                break;
+            case "d":
+                position.setX(position.getX() + 10);
+                break;
+            case "w":
+                position.setY(position.getY() - 10);
+                break;
+            case "s":
+                position.setY(position.getY() + 10);
+                break;
+        }
+        return position;
     }
 
 }
